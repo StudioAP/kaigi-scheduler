@@ -1,0 +1,58 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+// 会議モデル
+model Meeting {
+  id          String    @id @default(uuid())
+  title       String    // 会議タイトル
+  description String?   // 会議説明（任意）
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  timeSlots   TimeSlot[] // 会議の候補日時
+  participants Participant[] // 会議の参加者
+}
+
+// 候補日時モデル
+model TimeSlot {
+  id        String    @id @default(uuid())
+  date      DateTime  // 日付
+  startTime String    // 開始時間（24時間表示 "HH:MM"形式）
+  endTime   String    // 終了時間（24時間表示 "HH:MM"形式）
+  meetingId String    // 会議ID
+  meeting   Meeting   @relation(fields: [meetingId], references: [id], onDelete: Cascade)
+  responses Response[] // この時間枠に対する回答
+}
+
+// 参加者モデル
+model Participant {
+  id        String    @id @default(uuid())
+  name      String    // 参加者名（6文字まで）
+  comment   String?   // コメント（40文字まで）
+  meetingId String    // 会議ID
+  meeting   Meeting   @relation(fields: [meetingId], references: [id], onDelete: Cascade)
+  responses Response[] // この参加者からの回答
+  createdAt DateTime  @default(now())
+}
+
+// 回答モデル
+model Response {
+  id            String      @id @default(uuid())
+  availability  String      // 参加可否（"○", "△", "×"）
+  participantId String      // 参加者ID
+  participant   Participant @relation(fields: [participantId], references: [id], onDelete: Cascade)
+  timeSlotId    String      // 候補日時ID
+  timeSlot      TimeSlot    @relation(fields: [timeSlotId], references: [id], onDelete: Cascade)
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+
+  @@unique([participantId, timeSlotId]) // 一人の参加者が同じ時間枠に複数の回答をしないようにする
+}
