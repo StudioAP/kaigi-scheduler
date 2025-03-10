@@ -1,3 +1,5 @@
+'use client';
+
 import React, { useState } from 'react';
 import { FiCopy, FiCheck } from 'react-icons/fi';
 import Button from './Button';

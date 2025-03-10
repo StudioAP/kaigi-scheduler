@@ -1,3 +1,5 @@
+'use client';
+
 import React from 'react';
 import { formatDate, formatTime, getAvailabilityColor, getAvailabilityStyle } from '@/lib/utils';
 import CopyToClipboard from '@/components/ui/CopyToClipboard';
