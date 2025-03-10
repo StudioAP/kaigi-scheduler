@@ -7,9 +7,10 @@ import { formatDate, formatTime } from '@/lib/utils';
 
 type TimeSlot = {
   id: string;
-  date: string;
+  date: Date | string;  // Dateオブジェクトとstring型の両方を許容
   startTime: string;
   endTime: string;
+  meetingId?: string;  // オプショナルに変更
 };
 
 type Meeting = {
@@ -17,6 +18,8 @@ type Meeting = {
   title: string;
   description: string | null;
   timeSlots: TimeSlot[];
+  createdAt?: Date;  // オプショナルに追加
+  updatedAt?: Date;  // オプショナルに追加
 };
 
 type ResponseFormProps = {
@@ -132,11 +135,17 @@ export default function ParticipantResponseForm({ meeting }: ResponseFormProps) 
   // 日付でグループ化されたタイムスロット
   const timeSlotsByDate: { [date: string]: TimeSlot[] } = {};
   meeting.timeSlots.forEach((slot) => {
-    const date = new Date(slot.date).toISOString().split('T')[0];
-    if (!timeSlotsByDate[date]) {
-      timeSlotsByDate[date] = [];
+    // Date型かstring型かを判定して処理
+    const dateString = slot.date instanceof Date 
+      ? slot.date.toISOString().split('T')[0]
+      : typeof slot.date === 'string' 
+        ? slot.date.split('T')[0] 
+        : new Date(slot.date).toISOString().split('T')[0];
+    
+    if (!timeSlotsByDate[dateString]) {
+      timeSlotsByDate[dateString] = [];
     }
-    timeSlotsByDate[date].push(slot);
+    timeSlotsByDate[dateString].push(slot);
   });
 
   return (
@@ -223,7 +232,9 @@ export default function ParticipantResponseForm({ meeting }: ResponseFormProps) 
                 {slots.map((slot) => (
                   <div
                     key={slot.id}
-                    ref={(el) => (timeSlotRefs.current[slot.id] = el)}
+                    ref={(el) => {
+                      timeSlotRefs.current[slot.id] = el;
+                    }}
                     className="px-4 py-3 flex flex-wrap gap-4 items-center"
                     onMouseEnter={() => handleDragEnter(slot.id)}
                   >
